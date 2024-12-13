@@ -1,10 +1,12 @@
+<script setup></script>
+
 <template>
   <aside
     class="justify-center h-screen p-5 m-3 text-white border-2 border-white rounded-lg w-60"
   >
     <h5 class="p-4">gates</h5>
     <div class="flex gap-3 ml-3">
-      <div class="">
+      <div class="" id="draggable" draggable="true">
         <svg class="w-10 h-10">
           <path
             d="M 24.7 15 L 30.5 15 M 1.5 10.65 L 7.3 10.65 M 1.5 19.35 L 7.3 19.35"
