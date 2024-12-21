@@ -1,6 +1,29 @@
 <script setup>
 import NavBar from "./components/NavBar.vue";
 import Sidebar from "./components/Sidebar.vue";
+
+import { ref, onMounted } from "vue";
+
+const canvasRef = ref(null);
+
+onMounted(() => {
+  const canvas = canvasRef.value;
+
+  canvas.addEventListener("dragover", (e) => {
+    e.preventDefault();
+  });
+
+  canvas.addEventListener("drop", (e) => {
+    e.preventDefault();
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.right;
+
+    const draggedSvg = e.dataTransfer.getData("text/plain");
+    console.log(draggedSvg);
+  });
+});
 </script>
 
 <template>
@@ -15,14 +38,16 @@ import Sidebar from "./components/Sidebar.vue";
           class="w-full h-full bg-white rounded-lg shadow-lg canvas-container"
         >
           <!-- Canvas or other content goes here -->
-          <canvas id="diagramCanvas" style="border: 1px solid #ccc"></canvas>
+          <canvas
+            ref="canvasRef"
+            id="diagramCanvas"
+            style="border: 1px solid #ccc"
+          ></canvas>
         </div>
       </main>
     </div>
   </div>
 </template>
-
-<script></script>
 
 <style scoped>
 main {
