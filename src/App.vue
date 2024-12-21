@@ -1,10 +1,12 @@
 <script setup>
 import NavBar from "./components/NavBar.vue";
 import Sidebar from "./components/Sidebar.vue";
+import { svgData } from "./assets/svgData";
 
 import { ref, onMounted } from "vue";
 
 const canvasRef = ref(null);
+const draggedItems = ref([]);
 
 onMounted(() => {
   const canvas = canvasRef.value;
@@ -21,9 +23,21 @@ onMounted(() => {
     const y = e.clientY - rect.right;
 
     const draggedSvg = e.dataTransfer.getData("text/plain");
-    console.log(draggedSvg);
+
+    draggedItems.value.push({
+      svgId: draggedItems.value.length + 1,
+      svgName: draggedSvg,
+      x,
+      y,
+    });
+    // console.log(draggedItems);
   });
 });
+
+// Helper function to get the SVG by id
+const getSvgById = (id) => {
+  return svgData.find((svg) => svg.id === id);
+};
 </script>
 
 <template>
