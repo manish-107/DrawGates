@@ -7,7 +7,7 @@ import { svgData } from "@/assets/svgData";
     class="justify-center h-screen p-5 m-3 text-white border-2 border-white rounded-lg w-60"
   >
     <h5 class="p-4">Gates</h5>
-    <div class="flex gap-3 ml-3">
+    <div class="flex gap-3">
       <div
         v-for="gate in svgData"
         :key="gate.id"
