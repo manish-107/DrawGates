@@ -7,14 +7,14 @@ import { svgData } from "@/assets/svgData";
     class="justify-center h-screen p-5 m-3 text-white border-2 border-white rounded-lg w-60"
   >
     <h5 class="p-4">Gates</h5>
-    <div class="flex gap-3">
+    <div class="flex flex-wrap gap-3">
       <div
         v-for="gate in svgData"
         :key="gate.id"
         id="draggable"
         @dragstart="(e) => e.dataTransfer.setData('text/plain', gate.id)"
         draggable="true"
-        class="w-10 h-10"
+        class="w-1/5 p-1"
       >
         <svg :width="gate.width" :height="gate.height" viewBox="0 0 32 32">
           <path

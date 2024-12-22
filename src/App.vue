@@ -12,11 +12,11 @@ const getSvgById = (id) => {
   return svgData.find((svg) => svg.id === id);
 };
 
-const renderSvg = (svg, x, y) => {
+const renderSvg = (svg, x, y, scale = 1.5) => {
   const svgContainer = svgContainerRef.value;
 
   const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  group.setAttribute("transform", `translate(${x}, ${y})`);
+  group.setAttribute("transform", `translate(${x}, ${y}) scale(${scale})`);
 
   let isDragging = false;
   let startX, startY, initialX, initialY;
@@ -51,7 +51,10 @@ const renderSvg = (svg, x, y) => {
     const newX = initialX + deltaX;
     const newY = initialY + deltaY;
 
-    group.setAttribute("transform", `translate(${newX}, ${newY})`);
+    group.setAttribute(
+      "transform",
+      `translate(${newX}, ${newY}) scale(${scale})`
+    );
   };
 
   const onMouseUp = () => {
@@ -73,9 +76,37 @@ const renderSvg = (svg, x, y) => {
     pathElement.setAttribute("fill", path.fill);
     pathElement.setAttribute("stroke", path.stroke);
     pathElement.setAttribute("stroke-width", path["stroke-width"]);
-    pathElement.setAttribute("transform", "scale(2)"); // Scale factor for size
+    pathElement.setAttribute("transform", "scale(2)");
+
+    pathElement.addEventListener("mouseover", () => {
+      pathElement.setAttribute("stroke", "green");
+    });
+
+    pathElement.addEventListener("mouseleave", () => {
+      pathElement.setAttribute("stroke", path.stroke);
+    });
 
     group.appendChild(pathElement);
+
+    // If the path has an ellipse, handle it separately
+    if (path.ellipse) {
+      const ellipseElement = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "ellipse"
+      );
+
+      console.log(path.ellipse);
+      ellipseElement.setAttribute("cx", path.ellipse.cx);
+      ellipseElement.setAttribute("cy", path.ellipse.cy);
+      ellipseElement.setAttribute("rx", path.ellipse.rx);
+      ellipseElement.setAttribute("ry", path.ellipse.ry);
+      ellipseElement.setAttribute("fill", path.ellipse.fill);
+      ellipseElement.setAttribute("stroke", path.ellipse.stroke);
+      ellipseElement.setAttribute("stroke-width", path.ellipse["stroke-width"]);
+      ellipseElement.setAttribute("transform", "scale(2)");
+
+      group.appendChild(ellipseElement);
+    }
   });
 
   svgContainer.appendChild(group);
@@ -95,19 +126,21 @@ onMounted(() => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const draggedSvg = e.dataTransfer.getData("text/plain");
-    const svg = getSvgById(draggedSvg);
+    const draggedSvgId = e.dataTransfer.getData("text/plain");
+    const svg = getSvgById(draggedSvgId);
 
     if (svg) {
       draggedItems.value.push({
         svgId: draggedItems.value.length + 1,
-        svgName: draggedSvg,
+        svgName: draggedSvgId,
         x,
         y,
       });
 
       renderSvg(svg, x, y);
     }
+
+    console.log(draggedItems.value);
   });
 });
 </script>
