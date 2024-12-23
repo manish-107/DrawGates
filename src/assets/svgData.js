@@ -160,6 +160,9 @@ export const svgData = [
     width: "40px",
     height: "40px",
   },
+];
+
+export const lines = [
   {
     id: "singlearrowline",
     paths: [

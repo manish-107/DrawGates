@@ -7,6 +7,7 @@ import { ref, onMounted } from "vue";
 
 const svgContainerRef = ref(null);
 const draggedItems = ref([]);
+const lines = ref([]);
 
 const getSvgById = (id) => {
   return svgData.find((svg) => svg.id === id);
@@ -143,6 +144,21 @@ onMounted(() => {
     console.log(draggedItems.value);
   });
 });
+
+// lines
+const addLines = (lineData) => {
+  lines.value.push({
+    lineid: lines.value.length + 1,
+    startXY: [100, 100],
+    endXY: [300, 300],
+    startAttachedTo: null,
+    endAttachedTo: null,
+    lineName: lineData.lineName,
+    paths: lineData.path,
+  });
+
+  console.log(lines.value);
+};
 </script>
 
 <template>
@@ -150,7 +166,7 @@ onMounted(() => {
     <NavBar />
 
     <div class="flex flex-1">
-      <Sidebar />
+      <Sidebar @add-line="addLines" />
 
       <main class="flex-1 px-5 overflow-auto">
         <div
