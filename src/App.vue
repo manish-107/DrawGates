@@ -113,11 +113,126 @@ const renderSvg = (svg, x, y, scale = 1.5) => {
   svgContainer.appendChild(group);
 };
 
+// lines
+const addLines = (lineData) => {
+  lines.value.push({
+    lineid: lines.value.length + 1,
+    startXY: [100, 100],
+    endXY: [300, 300],
+    startAttachedTo: null,
+    endAttachedTo: null,
+    lineName: lineData.lineName,
+    paths: lineData.path,
+  });
+
+  console.log(lines.value);
+
+  // Render the new line immediately after adding it
+  renderLines(lines.value[lines.value.length - 1]);
+};
+
+const renderLines = (line) => {
+  const svgContainer = svgContainerRef.value;
+
+  const lineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  lineGroup.setAttribute("data-line-id", line.lineid);
+
+  // Create the line element
+  const lineElement = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "line"
+  );
+  lineElement.setAttribute("x1", line.startXY[0]);
+  lineElement.setAttribute("y1", line.startXY[1]);
+  lineElement.setAttribute("x2", line.endXY[0]);
+  lineElement.setAttribute("y2", line.endXY[1]);
+  lineElement.setAttribute("stroke", "white");
+  lineElement.setAttribute("stroke-width", "2");
+
+  // Append line to group
+  lineGroup.appendChild(lineElement);
+
+  // Create start and end drag handles
+  const createHandle = (cx, cy) => {
+    const handle = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle"
+    );
+    handle.setAttribute("cx", cx);
+    handle.setAttribute("cy", cy);
+    handle.setAttribute("r", "5");
+    handle.setAttribute("fill", "red");
+    handle.setAttribute("class", "drag-handle");
+    return handle;
+  };
+
+  const startHandle = createHandle(line.startXY[0], line.startXY[1]);
+  const endHandle = createHandle(line.endXY[0], line.endXY[1]);
+
+  // Append handles to group
+  lineGroup.appendChild(startHandle);
+  lineGroup.appendChild(endHandle);
+
+  // Append group to the SVG container
+  svgContainer.appendChild(lineGroup);
+
+  // Enable dragging on both start and end handles
+  const enableHandleDrag = (handle, line, handleType) => {
+    handle.addEventListener("mousedown", () => {
+      updateLineOnDrag(handle, line, handleType);
+    });
+  };
+
+  // Add drag behavior for the handles
+  enableHandleDrag(startHandle, line, "startXY");
+  enableHandleDrag(endHandle, line, "endXY");
+
+  // Function to update the line and handles during dragging
+  const updateLineOnDrag = (handle, line, handleType) => {
+    const onMouseMove = (e) => {
+      const rect = svgContainer.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Update the respective coordinate (start or end) based on the handle
+      if (handleType === "startXY") {
+        line.startXY = [mouseX, mouseY];
+        startHandle.setAttribute("cx", mouseX);
+        startHandle.setAttribute("cy", mouseY);
+        lineElement.setAttribute("x1", mouseX);
+        lineElement.setAttribute("y1", mouseY);
+      } else if (handleType === "endXY") {
+        line.endXY = [mouseX, mouseY];
+        endHandle.setAttribute("cx", mouseX);
+        endHandle.setAttribute("cy", mouseY);
+        lineElement.setAttribute("x2", mouseX);
+        lineElement.setAttribute("y2", mouseY);
+      }
+    };
+
+    // Attach mousemove listener
+    svgContainer.addEventListener("mousemove", onMouseMove);
+
+    // Stop dragging when mouseup is triggered
+    const onMouseUp = () => {
+      svgContainer.removeEventListener("mousemove", onMouseMove);
+      svgContainer.removeEventListener("mouseup", onMouseUp);
+    };
+
+    svgContainer.addEventListener("mouseup", onMouseUp);
+  };
+};
+
 onMounted(() => {
   const svgContainer = svgContainerRef.value;
 
   svgContainer.addEventListener("dragover", (e) => {
     e.preventDefault();
+  });
+
+  // Render existing lines only once during mount
+  lines.value.forEach((line) => {
+    renderLines(line);
   });
 
   svgContainer.addEventListener("drop", (e) => {
@@ -144,21 +259,6 @@ onMounted(() => {
     console.log(draggedItems.value);
   });
 });
-
-// lines
-const addLines = (lineData) => {
-  lines.value.push({
-    lineid: lines.value.length + 1,
-    startXY: [100, 100],
-    endXY: [300, 300],
-    startAttachedTo: null,
-    endAttachedTo: null,
-    lineName: lineData.lineName,
-    paths: lineData.path,
-  });
-
-  console.log(lines.value);
-};
 </script>
 
 <template>
