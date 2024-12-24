@@ -8,9 +8,53 @@ import { ref, onMounted } from "vue";
 const svgContainerRef = ref(null);
 const draggedItems = ref([]);
 const lines = ref([]);
+const selectedId = ref(["", null]);
 
 const getSvgById = (id) => {
   return svgData.find((svg) => svg.id === id);
+};
+
+const deleteSelected = () => {
+  console.log("Selected ID:", selectedId.value);
+
+  if (!selectedId.value || selectedId.value[1] === null) {
+    console.warn("No SVG or line is selected for deletion.");
+    return;
+  }
+
+  // Check if the selected item is a SVG or a line
+  if (selectedId.value[0] === "svg") {
+    // Filter out the SVG with the matching selected ID
+    draggedItems.value = draggedItems.value.filter(
+      (svg) => svg.svgId !== selectedId.value[1]
+    );
+
+    // Find and remove the SVG element from the DOM
+    const svgElement = svgContainerRef.value.querySelector(
+      `[datasvgid="${selectedId.value[1]}"]`
+    );
+    if (svgElement) {
+      svgContainerRef.value.removeChild(svgElement);
+    }
+  } else if (selectedId.value[0] === "line") {
+    // Filter out the line with the matching selected ID
+    lines.value = lines.value.filter(
+      (line) => line.lineid !== selectedId.value[1]
+    );
+
+    // Find and remove the line group from the DOM
+    const lineElement = svgContainerRef.value.querySelector(
+      `[data-line-id="${selectedId.value[1]}"]`
+    );
+    if (lineElement) {
+      svgContainerRef.value.removeChild(lineElement);
+    }
+  }
+
+  // Clear the selection
+  selectedId.value = ["", null];
+  console.log("Updated draggedItems:", draggedItems.value);
+  console.log("Updated lines:", lines.value);
 };
 
 const renderSvg = (svg, x, y, scale = 1.5) => {
@@ -18,6 +62,7 @@ const renderSvg = (svg, x, y, scale = 1.5) => {
 
   const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
   group.setAttribute("transform", `translate(${x}, ${y}) scale(${scale})`);
+  group.setAttribute("datasvgid", draggedItems.value.length);
 
   let isDragging = false;
   let startX, startY, initialX, initialY;
@@ -41,6 +86,8 @@ const renderSvg = (svg, x, y, scale = 1.5) => {
     // Add event listeners for dragging
     svgContainer.addEventListener("mousemove", onMouseMove);
     svgContainer.addEventListener("mouseup", onMouseUp);
+
+    console.log(draggedItems.value);
   };
 
   const onMouseMove = (e) => {
@@ -65,6 +112,14 @@ const renderSvg = (svg, x, y, scale = 1.5) => {
     svgContainer.removeEventListener("mousemove", onMouseMove);
     svgContainer.removeEventListener("mouseup", onMouseUp);
   };
+
+  const onClick = () => {
+    selectedId.value[0] = "svg";
+    selectedId.value[1] = parseInt(group.getAttribute("datasvgid"));
+
+    console.log("Selected SVG ID:", selectedId);
+  };
+  group.addEventListener("click", onClick);
 
   group.addEventListener("mousedown", onMouseDown);
 
@@ -96,7 +151,6 @@ const renderSvg = (svg, x, y, scale = 1.5) => {
         "ellipse"
       );
 
-      console.log(path.ellipse);
       ellipseElement.setAttribute("cx", path.ellipse.cx);
       ellipseElement.setAttribute("cy", path.ellipse.cy);
       ellipseElement.setAttribute("rx", path.ellipse.rx);
@@ -125,8 +179,6 @@ const addLines = (lineData) => {
     paths: lineData.path,
   });
 
-  console.log(lines.value);
-
   // Render the new line immediately after adding it
   renderLines(lines.value[lines.value.length - 1]);
 };
@@ -152,6 +204,12 @@ const renderLines = (line) => {
   // Append line to group
   lineGroup.appendChild(lineElement);
 
+  const onClick = () => {
+    selectedId.value[0] = "line";
+    selectedId.value[1] = parseInt(lineGroup.getAttribute("data-line-id"));
+  };
+  lineGroup.addEventListener("click", onClick);
+
   // Create start and end drag handles
   const createHandle = (cx, cy) => {
     const handle = document.createElementNS(
@@ -160,7 +218,7 @@ const renderLines = (line) => {
     );
     handle.setAttribute("cx", cx);
     handle.setAttribute("cy", cy);
-    handle.setAttribute("r", "5");
+    handle.setAttribute("r", "3");
     handle.setAttribute("fill", "red");
     handle.setAttribute("class", "drag-handle");
     return handle;
@@ -266,7 +324,7 @@ onMounted(() => {
     <NavBar />
 
     <div class="flex flex-1">
-      <Sidebar @add-line="addLines" />
+      <Sidebar @add-line="addLines" @delete-selected="deleteSelected" />
 
       <main class="flex-1 px-5 overflow-auto">
         <div
