@@ -2,14 +2,14 @@
 import { svgData } from "@/assets/svgData";
 import { lines } from "@/assets/svgData";
 
-const emit = defineEmits(["add-line", "delete-selected"]);
+const emit = defineEmits(["add-line", "delete-selected", "download-image"]);
 </script>
 
 <template>
   <aside
-    class="justify-center h-screen p-5 m-3 text-white border-2 border-white rounded-lg w-60"
+    class="justify-center h-screen p-5 m-3 text-white border border-[#787676] rounded-lg w-60"
   >
-    <div class="flex flex-wrap gap-3 bg-[#2d2b2b] p-3 rounded-lg">
+    <div class="flex flex-row gap-3 bg-[#2d2b2b] p-3 rounded-lg">
       <button
         @click="emit('delete-selected')"
         class="inline-flex items-center px-2 py-2 space-x-2 text-sm font-medium bg-white border rounded-lg text-slate-800 hover:text-blue-600 hover:bg-slate-100 border-slate-200"
@@ -31,6 +31,12 @@ const emit = defineEmits(["add-line", "delete-selected"]);
           </svg>
         </span>
         <span class="hidden md:inline-block">Delete</span>
+      </button>
+      <button
+        @click="emit('download-image')"
+        class="inline-flex items-center px-2 py-2 space-x-2 text-sm font-medium bg-white border rounded-lg text-slate-800 hover:text-blue-600 hover:bg-slate-100 border-slate-200"
+      >
+        <span class="hidden md:inline-block">Download</span>
       </button>
     </div>
 

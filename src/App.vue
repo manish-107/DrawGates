@@ -14,6 +14,75 @@ const getSvgById = (id) => {
   return svgData.find((svg) => svg.id === id);
 };
 
+const downloadImage = () => {
+  const svgElement = document.getElementById("diagramSvg");
+
+  if (!svgElement) {
+    console.warn("SVG element not found.");
+    return;
+  }
+
+  // Get the bounding box of the entire SVG
+  const bbox = svgElement.getBBox();
+  const minX = bbox.x - 284; // Adjust for sidebar
+  const minY = bbox.y - 84; // Adjust for navbar
+  const maxX = bbox.x + bbox.width + 284; // Full width with offset
+  const maxY = bbox.y + bbox.height + 84; // Full height with offset
+
+  // Clone SVG content into a new <svg>
+  const svgNS = "http://www.w3.org/2000/svg";
+  const croppedSvg = document.createElementNS(svgNS, "svg");
+  croppedSvg.setAttribute("xmlns", svgNS);
+  croppedSvg.setAttribute(
+    "viewBox",
+    `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
+  );
+  croppedSvg.setAttribute("width", maxX - minX);
+  croppedSvg.setAttribute("height", maxY - minY);
+  croppedSvg.setAttribute("style", "background-color: black;");
+
+  // Clone the entire SVG element
+  Array.from(svgElement.children).forEach((child) => {
+    croppedSvg.appendChild(child.cloneNode(true));
+  });
+
+  // Serialize the cropped SVG to a string
+  const svgData = new XMLSerializer().serializeToString(croppedSvg);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = function () {
+    // Create a canvas to draw the image
+    const canvas = document.createElement("canvas");
+    canvas.width = maxX - minX;
+    canvas.height = maxY - minY;
+
+    const ctx = canvas.getContext("2d");
+
+    // Set background color to black
+    ctx.fillStyle = "#444";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw the SVG image onto the canvas
+    ctx.drawImage(img, 0, 0);
+
+    // Export the canvas as a PNG
+    const pngData = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = pngData;
+    a.download = "full_canvas.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Clean up
+    URL.revokeObjectURL(url);
+  };
+
+  img.src = url;
+};
+
 const deleteSelected = () => {
   console.log("Selected ID:", selectedId.value);
 
@@ -204,11 +273,18 @@ const renderLines = (line) => {
   // Append line to group
   lineGroup.appendChild(lineElement);
 
-  const onClick = () => {
-    selectedId.value[0] = "line";
-    selectedId.value[1] = parseInt(lineGroup.getAttribute("data-line-id"));
-  };
-  lineGroup.addEventListener("click", onClick);
+  lineElement.addEventListener("mouseover", () => {
+    lineElement.setAttribute("stroke", "green");
+  });
+
+  lineElement.addEventListener("mouseleave", () => {
+    lineElement.setAttribute("stroke", "white");
+  });
+
+  lineGroup.addEventListener("click", () => {
+    selectedId.value = ["line", line.lineid];
+    console.log("Selected Line ID:", selectedId.value);
+  });
 
   // Create start and end drag handles
   const createHandle = (cx, cy) => {
@@ -324,7 +400,11 @@ onMounted(() => {
     <NavBar />
 
     <div class="flex flex-1">
-      <Sidebar @add-line="addLines" @delete-selected="deleteSelected" />
+      <Sidebar
+        @add-line="addLines"
+        @delete-selected="deleteSelected"
+        @download-image="downloadImage"
+      />
 
       <main class="flex-1 px-5 overflow-auto">
         <div
@@ -336,7 +416,6 @@ onMounted(() => {
             xmlns="http://www.w3.org/2000/svg"
             class="w-full h-full svgcontainer"
             style="
-              border: 1px solid #ccc;
               background: #1e1e1e;
               background-image: linear-gradient(#444 1px, transparent 1px),
                 linear-gradient(90deg, #444 1px, transparent 1px);
