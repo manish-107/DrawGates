@@ -364,11 +364,6 @@ onMounted(() => {
     e.preventDefault();
   });
 
-  // Render existing lines only once during mount
-  lines.value.forEach((line) => {
-    renderLines(line);
-  });
-
   svgContainer.addEventListener("drop", (e) => {
     e.preventDefault();
 
@@ -391,6 +386,11 @@ onMounted(() => {
     }
 
     console.log(draggedItems.value);
+  });
+
+  // Render existing lines only once during mount
+  lines.value.forEach((line) => {
+    renderLines(line);
   });
 });
 </script>
