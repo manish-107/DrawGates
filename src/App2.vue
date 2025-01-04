@@ -1,11 +1,34 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { ref, onMounted } from "vue";
+import Shapes from "./classes/shapes";
 import NavBar from "./components/NavBar.vue";
 import Sidebar from "./components/Sidebar.vue";
 import { svgData } from "./assets/svgData";
 
 const svgContainerRef = ref(null);
 const draggedItems = ref([]);
+
+const renderSvg = (svg, x, y) => {
+  const newShape = new Shapes({
+    svgId: draggedItems.value.length + 1,
+    svgName: svg.id,
+    x,
+    y,
+    style: {
+      strokeColor: "#444",
+      fillColor: "#000",
+      strokeWidth: 1,
+    },
+    dimensions: {
+      width: 48,
+      height: 48,
+    },
+    paths: svg.paths,
+  });
+
+  newShape.render(svgContainerRef.value);
+  draggedItems.value.push(newShape);
+};
 
 const getSvgById = (id) => {
   return svgData.find((svg) => svg.id === id);
@@ -29,49 +52,23 @@ onMounted(() => {
     const svg = getSvgById(draggedSvgId);
 
     if (svg) {
-      draggedItems.value.push({
-        svgId: draggedItems.value.length + 1,
-        svgName: draggedSvgId,
-        offset: { x, y },
-        style: {
-          fillColor: "#ff0000",
-          strokeColor: "#000000",
-          strokeWidth: 2,
-        },
-        dimensions: { width: 50, height: 50 },
-        paths: svg.paths,
-      });
+      renderSvg(svg, x, y);
     }
   });
 });
-
-watch(
-  draggedItems,
-  (newItems) => {
-    console.log("Dragged items updated:", newItems);
-  },
-  { deep: true }
-);
 </script>
 
 <template>
   <div class="flex flex-col min-h-screen">
     <NavBar />
-
     <div class="flex flex-1">
-      <Sidebar
-        @add-line="addLines"
-        @delete-selected="deleteSelected"
-        @download-image="downloadImage"
-      />
-
+      <Sidebar />
       <main class="flex-1 px-5 overflow-auto">
         <div
           class="w-full h-full bg-white rounded-lg shadow-lg canvas-container resizable-container"
         >
           <svg
             ref="svgContainerRef"
-            id="diagramSvg"
             xmlns="http://www.w3.org/2000/svg"
             class="w-full h-full svgcontainer"
             style="
@@ -86,3 +83,21 @@ watch(
     </div>
   </div>
 </template>
+
+<style scoped>
+.main {
+  margin-top: 10px;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+.svgcontainer {
+  cursor: default;
+}
+
+.resizable-container {
+  min-width: 300px;
+  min-height: 300px;
+  resize: both;
+  overflow: auto;
+}
+</style>
