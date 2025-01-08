@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, reactive } from "vue";
 import Shapes from "./classes/shapes";
 import Line from "./classes/lines";
 import NavBar from "./components/NavBar.vue";
@@ -37,8 +37,8 @@ const renderAllLines = () => {
 // Re-render everything
 const renderAll = () => {
   svgContainerRef.value.innerHTML = "";
-  renderAllShapes();
   renderAllLines();
+  renderAllShapes();
   console.log(lines.value);
   console.log(draggedItems.value);
 };
@@ -46,7 +46,7 @@ const renderAll = () => {
 // Add a new line
 const addLines = () => {
   const newLineData = {
-    lineId: `line-${lines.value.length + 1}`,
+    lineId: `l${lines.value.length + 1}`,
     startXY: [100, 100],
     endXY: [300, 300],
     lineName: `Line ${lines.value.length + 1}`,
@@ -60,7 +60,7 @@ const getSvgById = (id) => svgData.find((svg) => svg.id === id);
 // Add a shape to the container
 const renderShape = (shapeData, x, y) => {
   const shape = {
-    svgId: `shape-${draggedItems.value.length + 1}`,
+    svgId: `s${draggedItems.value.length + 1}`,
     svgName: shapeData.id,
     x,
     y,

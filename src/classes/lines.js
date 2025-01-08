@@ -5,7 +5,7 @@ export default class Line {
     this.endXY = endXY;
     this.lineName = lineName;
     this.svgContainer = svgContainer;
-    this.lines = lines; // Store reference to the lines array
+    this.lines = lines;
     this.group = null;
     this.lineElement = null;
     this.startHandle = null;
@@ -47,8 +47,8 @@ export default class Line {
     this.group.appendChild(this.lineElement);
 
     // Create drag handles
-    this.startHandle = this.createHandle(this.startXY);
-    this.endHandle = this.createHandle(this.endXY);
+    this.startHandle = this.createHandle(this.startXY, "start");
+    this.endHandle = this.createHandle(this.endXY, "end");
 
     // Append handles to the group
     this.group.appendChild(this.startHandle);
@@ -62,7 +62,7 @@ export default class Line {
     this.svgContainer.appendChild(this.group);
   }
 
-  createHandle([cx, cy]) {
+  createHandle([cx, cy], handleType) {
     const handle = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "circle"
@@ -72,6 +72,10 @@ export default class Line {
     handle.setAttribute("r", "3");
     handle.setAttribute("fill", "red");
     handle.setAttribute("class", "drag-handle");
+
+    const handleId = `${this.lineId}${handleType === "start" ? "S" : "E"}`;
+    handle.setAttribute("data-handle-id", handleId);
+
     return handle;
   }
 
@@ -124,3 +128,8 @@ export default class Line {
     this.svgContainer.addEventListener("mouseup", onMouseUp);
   }
 }
+
+/*
+ while dragging when mouse(when mouse up) if mouse is over svgshape when move up it should get the id of that svgshape and from the draggedItems array get the offset of that svgshape get the difference of that svgshape offset and that dragging handel store the difference along with the id of that svg, when you render the line if that line points is contains any joinedsvg id it should calculate the offset and change when the svgshape is moved, while dragging the svg shape that line axies should also chnage  
+
+*/
