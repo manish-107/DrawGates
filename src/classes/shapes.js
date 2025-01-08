@@ -1,5 +1,14 @@
 export default class Shapes {
-  constructor({ svgId, svgName, x, y, style, dimensions, paths }) {
+  constructor({
+    svgId,
+    svgName,
+    x,
+    y,
+    style,
+    dimensions,
+    paths,
+    draggedItems,
+  }) {
     this.svgId = svgId;
     this.svgName = svgName;
     this.x = x || 0;
@@ -11,28 +20,56 @@ export default class Shapes {
     this.height = dimensions.height || 48;
     this.paths = paths;
     this.scaleFactor = 2;
+    this.draggedItems = draggedItems; // Store reference to draggedItems array
   }
 
   setPosition(x, y) {
     this.x = x;
     this.y = y;
+    this.updateDraggedItem();
   }
 
   setId(svgId) {
     this.svgId = svgId;
+    this.updateDraggedItem();
   }
 
   resize(width, height) {
     this.width = width;
     this.height = height;
+    this.updateDraggedItem();
   }
 
   setColor(color) {
     this.fillColor = color;
+    this.updateDraggedItem();
   }
 
   setScale(scaleFactor) {
     this.scaleFactor = scaleFactor;
+    this.updateDraggedItem();
+  }
+
+  updateDraggedItem() {
+    const shapeIndex = this.draggedItems.value.findIndex(
+      (item) => item.svgId === this.svgId
+    );
+    if (shapeIndex !== -1) {
+      this.draggedItems.value[shapeIndex] = {
+        ...this.draggedItems.value[shapeIndex],
+        x: this.x,
+        y: this.y,
+        style: {
+          strokeColor: this.strokeColor,
+          fillColor: this.fillColor,
+          strokeWidth: this.strokeWidth,
+        },
+        dimensions: {
+          width: this.width,
+          height: this.height,
+        },
+      };
+    }
   }
 
   render(svgContainer) {
@@ -84,6 +121,9 @@ export default class Shapes {
         "transform",
         `translate(${newX}, ${newY}) scale(${this.scaleFactor})`
       );
+
+      // Update the shape's position
+      this.setPosition(newX, newY);
     };
 
     const onMouseUp = () => {

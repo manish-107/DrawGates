@@ -1,17 +1,67 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
 import Shapes from "./classes/shapes";
+import Line from "./classes/lines";
 import NavBar from "./components/NavBar.vue";
 import Sidebar from "./components/Sidebar.vue";
 import { svgData } from "./assets/svgData";
 
 const svgContainerRef = ref(null);
-const draggedItems = ref([]);
+const draggedItems = ref([]); // Store shape instances
+const lines = ref([]); // Store line instances
 
-const renderSvg = (svg, x, y) => {
-  const newShape = new Shapes({
-    svgId: draggedItems.value.length + 1,
-    svgName: svg.id,
+// Render all shapes
+const renderAllShapes = () => {
+  draggedItems.value.forEach((shapeData) => {
+    const shape = new Shapes({
+      ...shapeData,
+      svgContainer: svgContainerRef.value,
+      draggedItems,
+    });
+    shape.render(svgContainerRef.value);
+  });
+};
+
+// Render all lines
+const renderAllLines = () => {
+  lines.value.forEach((lineData) => {
+    const line = new Line({
+      ...lineData,
+      svgContainer: svgContainerRef.value,
+      lines,
+    });
+    line.render();
+  });
+};
+
+// Re-render everything
+const renderAll = () => {
+  svgContainerRef.value.innerHTML = "";
+  renderAllShapes();
+  renderAllLines();
+  console.log(lines.value);
+  console.log(draggedItems.value);
+};
+
+// Add a new line
+const addLines = () => {
+  const newLineData = {
+    lineId: `line-${lines.value.length + 1}`,
+    startXY: [100, 100],
+    endXY: [300, 300],
+    lineName: `Line ${lines.value.length + 1}`,
+  };
+  lines.value.push(newLineData);
+};
+
+// Find an SVG by ID
+const getSvgById = (id) => svgData.find((svg) => svg.id === id);
+
+// Add a shape to the container
+const renderShape = (shapeData, x, y) => {
+  const shape = {
+    svgId: `shape-${draggedItems.value.length + 1}`,
+    svgName: shapeData.id,
     x,
     y,
     style: {
@@ -23,24 +73,25 @@ const renderSvg = (svg, x, y) => {
       width: 48,
       height: 48,
     },
-    paths: svg.paths,
-  });
-
-  newShape.render(svgContainerRef.value);
-  draggedItems.value.push(newShape);
+    paths: shapeData.paths,
+  };
+  draggedItems.value.push(shape);
 };
 
-const getSvgById = (id) => {
-  return svgData.find((svg) => svg.id === id);
-};
+// Watchers to re-render on array changes
+watch(draggedItems, renderAll, { deep: true });
+watch(lines, renderAll, { deep: true });
 
+// Event listeners for the SVG container
 onMounted(() => {
   const svgContainer = svgContainerRef.value;
 
+  // Handle drag over
   svgContainer.addEventListener("dragover", (e) => {
     e.preventDefault();
   });
 
+  // Handle drop for shapes
   svgContainer.addEventListener("drop", (e) => {
     e.preventDefault();
 
@@ -52,7 +103,7 @@ onMounted(() => {
     const svg = getSvgById(draggedSvgId);
 
     if (svg) {
-      renderSvg(svg, x, y);
+      renderShape(svg, x, y);
     }
   });
 });
@@ -62,7 +113,11 @@ onMounted(() => {
   <div class="flex flex-col min-h-screen">
     <NavBar />
     <div class="flex flex-1">
-      <Sidebar />
+      <Sidebar
+        @add-line="addLines"
+        @delete-selected="deleteSelected"
+        @download-image="downloadImage"
+      />
       <main class="flex-1 px-5 overflow-auto">
         <div
           class="w-full h-full bg-white rounded-lg shadow-lg canvas-container resizable-container"

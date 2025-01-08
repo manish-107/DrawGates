@@ -1,39 +1,126 @@
-class lines {
-  constructor(svgContainer, lineId, x1, y1, x1, x2, stroke, strokeWidth) {
+export default class Line {
+  constructor({ lineId, startXY, endXY, lineName, svgContainer, lines }) {
+    this.lineId = lineId;
+    this.startXY = startXY;
+    this.endXY = endXY;
+    this.lineName = lineName;
     this.svgContainer = svgContainer;
-    this.x1 = x1;
-    this.lineId = lineId;
-    this.x2 = x2;
-    this.y1 = y1;
-    this.y2 = y2;
-    this.stroke = stroke || "black";
-    this.strokeWidth = strokeWidth || "2";
+    this.lines = lines; // Store reference to the lines array
+    this.group = null;
+    this.lineElement = null;
+    this.startHandle = null;
+    this.endHandle = null;
   }
 
-  setStartPoint(x1, y1) {
-    this.x1 = x1;
-    this.y1 = y1;
+  render() {
+    // Create group element
+    this.group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    this.group.setAttribute("data-line-id", this.lineId);
+
+    // Create line element
+    this.lineElement = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "line"
+    );
+    this.lineElement.setAttribute("x1", this.startXY[0]);
+    this.lineElement.setAttribute("y1", this.startXY[1]);
+    this.lineElement.setAttribute("x2", this.endXY[0]);
+    this.lineElement.setAttribute("y2", this.endXY[1]);
+    this.lineElement.setAttribute("stroke", "white");
+    this.lineElement.setAttribute("stroke-width", "2");
+
+    // Hover effects
+    this.lineElement.addEventListener("mouseover", () => {
+      this.lineElement.setAttribute("stroke", "green");
+    });
+
+    this.lineElement.addEventListener("mouseleave", () => {
+      this.lineElement.setAttribute("stroke", "white");
+    });
+
+    // Selection event
+    this.group.addEventListener("click", () => {
+      console.log("Selected Line ID:", this.lineId);
+    });
+
+    // Append the line to the group
+    this.group.appendChild(this.lineElement);
+
+    // Create drag handles
+    this.startHandle = this.createHandle(this.startXY);
+    this.endHandle = this.createHandle(this.endXY);
+
+    // Append handles to the group
+    this.group.appendChild(this.startHandle);
+    this.group.appendChild(this.endHandle);
+
+    // Add drag functionality to handles
+    this.enableDrag(this.startHandle, "startXY");
+    this.enableDrag(this.endHandle, "endXY");
+
+    // Append group to SVG container
+    this.svgContainer.appendChild(this.group);
   }
 
-  setEndPoint(x2, y2) {
-    this.x2 = x2;
-    this.y2 = y2;
+  createHandle([cx, cy]) {
+    const handle = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle"
+    );
+    handle.setAttribute("cx", cx);
+    handle.setAttribute("cy", cy);
+    handle.setAttribute("r", "3");
+    handle.setAttribute("fill", "red");
+    handle.setAttribute("class", "drag-handle");
+    return handle;
   }
 
-  setLineId(lineId) {
-    this.lineId = lineId;
+  enableDrag(handle, handleType) {
+    handle.addEventListener("mousedown", () => {
+      this.updateLineOnDrag(handle, handleType);
+    });
   }
 
-  createLine() {
-    this.line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    this.line.setAttribute("x1", this.x1);
-    this.line.setAttribute("y1", this.y1);
-    this.line.setAttribute("x2", this.x2);
-    this.line.setAttribute("y2", this.y2);
-    this.line.style.stroke = this.stroke;
-    this.line.style.strokeWidth = this.strokeWidth;
+  updateLineOnDrag(handle, handleType) {
+    const onMouseMove = (e) => {
+      const rect = this.svgContainer.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-    // Append to SVG Container
-    this.svgContainer.appendChild(this.line);
+      // Update the handle position and line attributes
+      if (handleType === "startXY") {
+        this.startXY = [mouseX, mouseY];
+        this.startHandle.setAttribute("cx", mouseX);
+        this.startHandle.setAttribute("cy", mouseY);
+        this.lineElement.setAttribute("x1", mouseX);
+        this.lineElement.setAttribute("y1", mouseY);
+      } else if (handleType === "endXY") {
+        this.endXY = [mouseX, mouseY];
+        this.endHandle.setAttribute("cx", mouseX);
+        this.endHandle.setAttribute("cy", mouseY);
+        this.lineElement.setAttribute("x2", mouseX);
+        this.lineElement.setAttribute("y2", mouseY);
+      }
+
+      // Update the corresponding line in the lines array
+      const lineIndex = this.lines.value.findIndex(
+        (line) => line.lineId === this.lineId
+      );
+      if (lineIndex !== -1) {
+        if (handleType === "startXY") {
+          this.lines.value[lineIndex].startXY = [mouseX, mouseY];
+        } else if (handleType === "endXY") {
+          this.lines.value[lineIndex].endXY = [mouseX, mouseY];
+        }
+      }
+    };
+
+    const onMouseUp = () => {
+      this.svgContainer.removeEventListener("mousemove", onMouseMove);
+      this.svgContainer.removeEventListener("mouseup", onMouseUp);
+    };
+
+    this.svgContainer.addEventListener("mousemove", onMouseMove);
+    this.svgContainer.addEventListener("mouseup", onMouseUp);
   }
 }
