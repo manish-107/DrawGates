@@ -9,6 +9,7 @@ import { svgData } from "./assets/svgData";
 const svgContainerRef = ref(null);
 const draggedItems = ref([]); // Store shape instances
 const lines = ref([]); // Store line instances
+const selectedIdDelete = ref(null);
 
 // Render all shapes
 const renderAllShapes = () => {
@@ -17,6 +18,7 @@ const renderAllShapes = () => {
       ...shapeData,
       svgContainer: svgContainerRef.value,
       draggedItems,
+      selectedIdDelete,
     });
     shape.render(svgContainerRef.value);
   });
@@ -29,9 +31,31 @@ const renderAllLines = () => {
       ...lineData,
       svgContainer: svgContainerRef.value,
       lines,
+      draggedItems,
+      selectedIdDelete,
     });
     line.render();
   });
+};
+
+const deleteSelected = () => {
+  console.log(selectedIdDelete.value);
+
+  if (selectedIdDelete.value?.startsWith("l")) {
+    // Delete the selected line
+    lines.value = lines.value.filter(
+      (lineData) => lineData.lineId !== selectedIdDelete.value
+    );
+    selectedIdDelete.value = null; // Clear the selection
+  } else if (selectedIdDelete.value?.startsWith("s")) {
+    // Delete the selected shape
+    draggedItems.value = draggedItems.value.filter(
+      (shapeData) => shapeData.svgId !== selectedIdDelete.value
+    );
+    selectedIdDelete.value = null; // Clear the selection
+  } else {
+    console.log("No valid item selected for deletion");
+  }
 };
 
 // Re-render everything
@@ -39,8 +63,6 @@ const renderAll = () => {
   svgContainerRef.value.innerHTML = "";
   renderAllLines();
   renderAllShapes();
-  console.log(lines.value);
-  console.log(draggedItems.value);
 };
 
 // Add a new line
@@ -49,6 +71,8 @@ const addLines = () => {
     lineId: `l${lines.value.length + 1}`,
     startXY: [100, 100],
     endXY: [300, 300],
+    startShapeJoin: { sid: null, diffX: null, diffY: null },
+    endShapeJoin: { sid: null, diffX: null, diffY: null },
     lineName: `Line ${lines.value.length + 1}`,
   };
   lines.value.push(newLineData);

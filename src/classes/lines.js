@@ -1,5 +1,14 @@
 export default class Line {
-  constructor({ lineId, startXY, endXY, lineName, svgContainer, lines }) {
+  constructor({
+    lineId,
+    startXY,
+    endXY,
+    lineName,
+    svgContainer,
+    lines,
+    draggedItems,
+    selectedIdDelete,
+  }) {
     this.lineId = lineId;
     this.startXY = startXY;
     this.endXY = endXY;
@@ -10,6 +19,9 @@ export default class Line {
     this.lineElement = null;
     this.startHandle = null;
     this.endHandle = null;
+    this.draggedItems = draggedItems;
+    this.selectedLine = null;
+    this.selectedIdDelete = selectedIdDelete;
   }
 
   render() {
@@ -22,10 +34,15 @@ export default class Line {
       "http://www.w3.org/2000/svg",
       "line"
     );
-    this.lineElement.setAttribute("x1", this.startXY[0]);
-    this.lineElement.setAttribute("y1", this.startXY[1]);
-    this.lineElement.setAttribute("x2", this.endXY[0]);
-    this.lineElement.setAttribute("y2", this.endXY[1]);
+
+    // Check for shape joins to determine the start and end coordinates
+    const startCoordinates = this.calculateCoordinates("startXY");
+    const endCoordinates = this.calculateCoordinates("endXY");
+
+    this.lineElement.setAttribute("x1", startCoordinates[0]);
+    this.lineElement.setAttribute("y1", startCoordinates[1]);
+    this.lineElement.setAttribute("x2", endCoordinates[0]);
+    this.lineElement.setAttribute("y2", endCoordinates[1]);
     this.lineElement.setAttribute("stroke", "white");
     this.lineElement.setAttribute("stroke-width", "2");
 
@@ -40,15 +57,16 @@ export default class Line {
 
     // Selection event
     this.group.addEventListener("click", () => {
-      console.log("Selected Line ID:", this.lineId);
+      this.selectedLine = this.lineId;
+      this.selectedIdDelete.value = this.lineId;
     });
 
     // Append the line to the group
     this.group.appendChild(this.lineElement);
 
     // Create drag handles
-    this.startHandle = this.createHandle(this.startXY, "start");
-    this.endHandle = this.createHandle(this.endXY, "end");
+    this.startHandle = this.createHandle(startCoordinates, "start");
+    this.endHandle = this.createHandle(endCoordinates, "end");
 
     // Append handles to the group
     this.group.appendChild(this.startHandle);
@@ -60,6 +78,34 @@ export default class Line {
 
     // Append group to SVG container
     this.svgContainer.appendChild(this.group);
+  }
+
+  calculateCoordinates(handleType) {
+    const lineIndex = this.lines.value.findIndex(
+      (line) => line.lineId === this.lineId
+    );
+
+    if (lineIndex !== -1) {
+      const shapeJoin =
+        handleType === "startXY"
+          ? this.lines.value[lineIndex].startShapeJoin
+          : this.lines.value[lineIndex].endShapeJoin;
+
+      if (shapeJoin && shapeJoin.sid) {
+        const matchedItem = this.draggedItems.value.find(
+          (item) => item.svgId === shapeJoin.sid
+        );
+
+        if (matchedItem) {
+          return [
+            matchedItem.x + shapeJoin.diffX,
+            matchedItem.y + shapeJoin.diffY,
+          ];
+        }
+      }
+    }
+
+    return handleType === "startXY" ? this.startXY : this.endXY;
   }
 
   createHandle([cx, cy], handleType) {
@@ -80,18 +126,21 @@ export default class Line {
   }
 
   enableDrag(handle, handleType) {
-    handle.addEventListener("mousedown", () => {
+    handle.addEventListener("mousedown", (event) => {
+      event.stopPropagation();
       this.updateLineOnDrag(handle, handleType);
     });
   }
 
   updateLineOnDrag(handle, handleType) {
+    let lineIndex;
+
     const onMouseMove = (e) => {
       const rect = this.svgContainer.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      // Update the handle position and line attributes
+      // Update handle position and line attributes
       if (handleType === "startXY") {
         this.startXY = [mouseX, mouseY];
         this.startHandle.setAttribute("cx", mouseX);
@@ -106,10 +155,10 @@ export default class Line {
         this.lineElement.setAttribute("y2", mouseY);
       }
 
-      // Update the corresponding line in the lines array
-      const lineIndex = this.lines.value.findIndex(
+      lineIndex = this.lines.value.findIndex(
         (line) => line.lineId === this.lineId
       );
+
       if (lineIndex !== -1) {
         if (handleType === "startXY") {
           this.lines.value[lineIndex].startXY = [mouseX, mouseY];
@@ -119,13 +168,77 @@ export default class Line {
       }
     };
 
-    const onMouseUp = () => {
+    const onMouseUp = (e) => {
       this.svgContainer.removeEventListener("mousemove", onMouseMove);
       this.svgContainer.removeEventListener("mouseup", onMouseUp);
+
+      const elementUnderCursor = document.elementFromPoint(
+        e.clientX,
+        e.clientY
+      );
+      const parentGroup = elementUnderCursor?.closest("g[data-svg-id]");
+
+      if (parentGroup) {
+        const svgId = parentGroup.getAttribute("data-svg-id");
+
+        const matchedItem = this.draggedItems.value.find(
+          (item) => item.svgId === svgId
+        );
+
+        if (matchedItem) {
+          const rect = this.svgContainer.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+
+          const offsetX = mouseX - matchedItem.x;
+          const offsetY = mouseY - matchedItem.y;
+
+          if (handleType === "startXY") {
+            this.lines.value[lineIndex].startShapeJoin = {
+              sid: svgId,
+              diffX: offsetX,
+              diffY: offsetY,
+            };
+          } else if (handleType === "endXY") {
+            this.lines.value[lineIndex].endShapeJoin = {
+              sid: svgId,
+              diffX: offsetX,
+              diffY: offsetY,
+            };
+          }
+        } else {
+          if (handleType === "startXY") {
+            this.lines.value[lineIndex].startShapeJoin = {
+              sid: null,
+              diffX: null,
+              diffY: null,
+            };
+          } else if (handleType === "endXY") {
+            this.lines.value[lineIndex].endShapeJoin = {
+              sid: null,
+              diffX: null,
+              diffY: null,
+            };
+          }
+        }
+      }
     };
 
     this.svgContainer.addEventListener("mousemove", onMouseMove);
     this.svgContainer.addEventListener("mouseup", onMouseUp);
+  }
+
+  delete() {
+    if (this.group) {
+      this.svgContainer.removeChild(this.group);
+    }
+
+    const index = this.lines.value.findIndex(
+      (line) => line.lineId === this.lineId
+    );
+    if (index !== -1) {
+      this.lines.value.splice(index, 1);
+    }
   }
 }
 

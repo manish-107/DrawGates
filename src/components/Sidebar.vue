@@ -46,13 +46,11 @@ const emit = defineEmits(["add-line", "delete-selected", "download-image"]);
         v-for="gate in svgData"
         :key="gate.id"
         id="draggable"
-        @dragstart="(e) => 
-        e.dataTransfer.setData('text/plain', gate.id)"
+        @dragstart="(e) => e.dataTransfer.setData('text/plain', gate.id)"
         draggable="true"
         class="w-1/6 p-1"
       >
-        <svg :width="gate.width" 
-        :height="gate.height" viewBox="0 0 32 32">
+        <svg :width="gate.width" :height="gate.height" viewBox="0 0 32 32">
           <path
             v-for="(path, index) in gate.paths"
             :key="index"
@@ -62,7 +60,7 @@ const emit = defineEmits(["add-line", "delete-selected", "download-image"]);
       </div>
     </div>
     <h5 class="p-4">Lines</h5>
-    <div class="flex flex-wrap ">
+    <div class="flex flex-wrap">
       <div
         v-for="line in lines"
         :key="line.id"
@@ -74,8 +72,7 @@ const emit = defineEmits(["add-line", "delete-selected", "download-image"]);
           })
         "
       >
-        <svg :width="line.width" 
-        :height="line.height" viewBox="0 0 32 32">
+        <svg :width="line.width" :height="line.height" viewBox="0 0 32 32">
           <path
             v-for="(path, index) in line.paths"
             :key="index"

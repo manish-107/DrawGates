@@ -8,6 +8,7 @@ export default class Shapes {
     dimensions,
     paths,
     draggedItems,
+    selectedIdDelete,
   }) {
     this.svgId = svgId;
     this.svgName = svgName;
@@ -20,7 +21,9 @@ export default class Shapes {
     this.height = dimensions.height || 48;
     this.paths = paths;
     this.scaleFactor = 2;
-    this.draggedItems = draggedItems; // Store reference to draggedItems array
+    this.draggedItems = draggedItems;
+    this.selectedIdDelete = selectedIdDelete;
+    this.selectedSvg = null;
   }
 
   setPosition(x, y) {
@@ -133,11 +136,12 @@ export default class Shapes {
     };
 
     const onClick = () => {
-      console.log(`SVG ID: ${this.svgId} clicked`);
+      this.selectedSvg = this.svgId;
+      this.selectedIdDelete.value = this.svgId;
     };
 
-    group.addEventListener("mousedown", onMouseDown);
     group.addEventListener("click", onClick);
+    group.addEventListener("mousedown", onMouseDown);
 
     this.paths.forEach((path) => {
       const pathElement = document.createElementNS(
@@ -151,5 +155,19 @@ export default class Shapes {
     });
 
     svgContainer.appendChild(group);
+  }
+
+  delete() {
+    console.log(this.selectedSvg);
+    if (this.group) {
+      this.svgContainer.removeChild(this.group);
+    }
+
+    const index = this.draggedItems.value.findIndex(
+      (draggedItem) => draggedItem.svgId === this.selectedSvg
+    );
+    if (index !== -1) {
+      this.draggedItems.value.splice(index, 1);
+    }
   }
 }
