@@ -242,8 +242,3 @@ export default class Line {
     }
   }
 }
-
-/*
- while dragging when mouse(when mouse up) if mouse is over svgshape when move up it should get the id of that svgshape and from the draggedItems array get the offset of that svgshape get the difference of that svgshape offset and that dragging handel store the difference along with the id of that svg, when you render the line if that line points is contains any joinedsvg id it should calculate the offset and change when the svgshape is moved, while dragging the svg shape that line axies should also chnage  
-
-*/

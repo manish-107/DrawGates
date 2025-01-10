@@ -1,29 +1,30 @@
-# drawgate
+# SVG Diagram Builder
 
-This template should help get you started developing with Vue 3 in Vite.
+## Project Overview
 
-## Recommended IDE Setup
+SVG Diagram Builder is a web-based tool that allows users to create and edit SVG diagrams, such as flowcharts and system designs. The tool supports drag-and-drop functionality for shapes, customizable connections between shapes, and dynamic diagram editing. Users can design and export their diagrams as PNG images.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Features
 
-## Customize configuration
+- **Shape Management**: Drag and drop various shapes onto the canvas.
+- **Line Connections**: Easily draw lines between shapes with adjustable connectors.
+- **Export as PNG**: Save your diagram as a PNG file for sharing or presentation.
+- **Interactive Canvas**: Real-time updates as you modify the diagram.
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## Tools and Technologies
 
-## Project Setup
+- **Frontend**:
+  - **Vue.js** for building interactive user interfaces.
+  - **HTML5** and **CSS3** for structuring and styling the app.
+  - **SVG** for vector-based graphics rendering.
 
-```sh
-npm install
-```
+## Installation
 
-### Compile and Hot-Reload for Development
+Follow these steps to set up the project locally:
 
-```sh
-npm run dev
-```
+### 1. Clone the repository
 
-### Compile and Minify for Production
-
-```sh
-npm run build
+```bash
+git clone https://github.com/manish-107/DrawGates
+cd DrawGates
 ```
