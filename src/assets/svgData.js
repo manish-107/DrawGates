@@ -123,43 +123,162 @@ export const svgData = [
     width: "40px",
     height: "40px",
   },
-  // {
-  //   id: "triangleGate",
-  //   paths: [
-  //     {
-  //       d: "M 1.5 15 L 7.3 15",
-  //       fill: "rgb(241, 243, 244)",
-  //       stroke: "rgb(0, 0, 0)",
-  //       "stroke-width": "1.3",
-  //       "stroke-miterlimit": "10",
-  //     },
-  //     {
-  //       d: "M 25.86 15 L 30.5 15",
-  //       fill: "rgb(241, 243, 244)",
-  //       stroke: "rgb(0, 0, 0)",
-  //       "stroke-width": "1.3",
-  //       "stroke-miterlimit": "10",
-  //     },
-  //     {
-  //       d: "M 23.83 15 L 6.43 23.7 L 6.43 6.3 Z",
-  //       fill: "rgb(241, 243, 244)",
-  //       stroke: "rgb(0, 0, 0)",
-  //       "stroke-width": "1.3",
-  //       "stroke-miterlimit": "10",
-  //     },
-  //   ],
-  //   ellipse: {
-  //     cx: "24.99",
-  //     cy: "15",
-  //     rx: "1.16",
-  //     ry: "1.16",
-  //     fill: "rgb(241, 243, 244)",
-  //     stroke: "rgb(0, 0, 0)",
-  //     "stroke-width": "1.3",
-  //   },
-  //   width: "40px",
-  //   height: "40px",
-  // },
+  {
+    id: "rectShape",
+    paths: [
+      {
+        d: "M 9 8 L 31 8 L 31 22 L 9 22 Z",
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "triangleShape",
+    paths: [
+      {
+        d: "M 20 8 L 32 28 L 8 28 Z",
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "squareShape",
+    paths: [
+      {
+        d: "M 8 8 L 28 8 L 28 28 L 8 28 Z", // Smaller Square
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "circleShape",
+    paths: [
+      {
+        d: "M 20,8 A 10,10 0 1,1 19.99,8 Z", // Smaller Circle
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "pentagonShape",
+    paths: [
+      {
+        d: "M 20 8 L 30 18 L 26 28 L 14 28 L 10 18 Z", // Smaller Pentagon
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "hexagonShape",
+    paths: [
+      {
+        d: "M 20 8 L 28 12 L 28 24 L 20 28 L 12 24 L 12 12 Z", // Smaller Hexagon
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "ellipseShape",
+    paths: [
+      {
+        d: "M 20,8 A 11.5,7.5 0 1,1 19.99,8 Z", // Smaller Ellipse
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "rhombusShape",
+    paths: [
+      {
+        d: "M 20 5 L 30 15 L 20 25 L 10 15 Z", // Rhombus
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "starShape",
+    paths: [
+      {
+        d: "M 20 5 L 24 15 L 35 15 L 26 22 L 30 35 L 20 28 L 10 35 L 14 22 L 5 15 L 16 15 Z", // Star
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "semiCircleShape",
+    paths: [
+      {
+        d: "M 5 20 A 15,15 0 0,1 35 20 L 20 20 Z", // Semi-Circle
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "parallelogramShape",
+    paths: [
+      {
+        d: "M 10 5 L 30 5 L 25 25 L 5 25 Z", // Parallelogram
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
+  {
+    id: "arrowRightShape",
+    paths: [
+      {
+        d: "M 10 15 L 25 15 L 25 10 L 35 20 L 25 30 L 25 25 L 10 25 Z", // Right Arrow
+        fill: "#444",
+        stroke: "white",
+        "stroke-width": "1",
+      },
+    ],
+    width: "40px",
+    height: "40px",
+  },
 ];
 
 export const lines = [

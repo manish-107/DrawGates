@@ -17,8 +17,8 @@ export default class Shapes {
     this.strokeColor = style.strokeColor || "white";
     this.fillColor = style.fillColor || "#000";
     this.strokeWidth = style.strokeWidth || 1;
-    this.width = dimensions.width || 48;
-    this.height = dimensions.height || 48;
+    this.width = dimensions.width || 90;
+    this.height = dimensions.height || 90;
     this.paths = paths;
     this.scaleFactor = 2;
     this.draggedItems = draggedItems;
