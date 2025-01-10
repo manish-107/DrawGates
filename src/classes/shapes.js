@@ -14,7 +14,7 @@ export default class Shapes {
     this.svgName = svgName;
     this.x = x || 0;
     this.y = y || 0;
-    this.strokeColor = style.strokeColor || "#444";
+    this.strokeColor = style.strokeColor || "white";
     this.fillColor = style.fillColor || "#000";
     this.strokeWidth = style.strokeWidth || 1;
     this.width = dimensions.width || 48;
@@ -125,7 +125,6 @@ export default class Shapes {
         `translate(${newX}, ${newY}) scale(${this.scaleFactor})`
       );
 
-      // Update the shape's position
       this.setPosition(newX, newY);
     };
 
@@ -140,8 +139,23 @@ export default class Shapes {
       this.selectedIdDelete.value = this.svgId;
     };
 
+    // Hover events for stroke color change
+    const onMouseOver = () => {
+      group.querySelectorAll("path").forEach((path) => {
+        path.setAttribute("stroke", "green"); // Change stroke color on hover
+      });
+    };
+
+    const onMouseOut = () => {
+      group.querySelectorAll("path").forEach((path) => {
+        path.setAttribute("stroke", "white"); // Revert stroke color
+      });
+    };
+
     group.addEventListener("click", onClick);
     group.addEventListener("mousedown", onMouseDown);
+    group.addEventListener("mouseover", onMouseOver);
+    group.addEventListener("mouseout", onMouseOut);
 
     this.paths.forEach((path) => {
       const pathElement = document.createElementNS(
