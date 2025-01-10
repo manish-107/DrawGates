@@ -172,7 +172,6 @@ export default class Shapes {
   }
 
   delete() {
-    console.log(this.selectedSvg);
     if (this.group) {
       this.svgContainer.removeChild(this.group);
     }

@@ -1,17 +1,103 @@
 <script setup>
+import { ref, watch, onMounted, reactive } from "vue";
+import Shapes from "./classes/shapes";
+import Line from "./classes/lines";
 import NavBar from "./components/NavBar.vue";
 import Sidebar from "./components/Sidebar.vue";
 import { svgData } from "./assets/svgData";
 
-import { ref, onMounted } from "vue";
-
 const svgContainerRef = ref(null);
-const draggedItems = ref([]);
-const lines = ref([]);
-const selectedId = ref(["", null]);
+const draggedItems = ref([]); // Store shape instances
+const lines = ref([]); // Store line instances
+const selectedIdDelete = ref(null);
 
-const getSvgById = (id) => {
-  return svgData.find((svg) => svg.id === id);
+// Render all shapes
+const renderAllShapes = () => {
+  draggedItems.value.forEach((shapeData) => {
+    const shape = new Shapes({
+      ...shapeData,
+      svgContainer: svgContainerRef.value,
+      draggedItems,
+      selectedIdDelete,
+    });
+    shape.render(svgContainerRef.value);
+  });
+};
+
+// Render all lines
+const renderAllLines = () => {
+  lines.value.forEach((lineData) => {
+    const line = new Line({
+      ...lineData,
+      svgContainer: svgContainerRef.value,
+      lines,
+      draggedItems,
+      selectedIdDelete,
+    });
+    line.render();
+  });
+};
+
+const deleteSelected = () => {
+  if (selectedIdDelete.value?.startsWith("l")) {
+    // Delete the selected line
+    lines.value = lines.value.filter(
+      (lineData) => lineData.lineId !== selectedIdDelete.value
+    );
+    selectedIdDelete.value = null; // Clear the selection
+  } else if (selectedIdDelete.value?.startsWith("s")) {
+    // Delete the selected shape
+    draggedItems.value = draggedItems.value.filter(
+      (shapeData) => shapeData.svgId !== selectedIdDelete.value
+    );
+    selectedIdDelete.value = null; // Clear the selection
+  } else {
+    console.log("No valid item selected for deletion");
+  }
+};
+
+// Re-render everything
+const renderAll = () => {
+  svgContainerRef.value.innerHTML = "";
+  renderAllLines();
+  renderAllShapes();
+};
+
+// Add a new line
+const addLines = () => {
+  const newLineData = {
+    lineId: `l${lines.value.length + 1}`,
+    startXY: [100, 100],
+    endXY: [300, 300],
+    startShapeJoin: { sid: null, diffX: null, diffY: null },
+    endShapeJoin: { sid: null, diffX: null, diffY: null },
+    lineName: `Line ${lines.value.length + 1}`,
+  };
+  lines.value.push(newLineData);
+};
+
+// Find an SVG by ID
+const getSvgById = (id) => svgData.find((svg) => svg.id === id);
+
+// Add a shape to the container
+const renderShape = (shapeData, x, y) => {
+  const shape = {
+    svgId: `s${draggedItems.value.length + 1}`,
+    svgName: shapeData.id,
+    x,
+    y,
+    style: {
+      strokeColor: "#444",
+      fillColor: "#000",
+      strokeWidth: 1,
+    },
+    dimensions: {
+      width: 48,
+      height: 48,
+    },
+    paths: shapeData.paths,
+  };
+  draggedItems.value.push(shape);
 };
 
 const downloadImage = () => {
@@ -83,287 +169,20 @@ const downloadImage = () => {
   img.src = url;
 };
 
-const deleteSelected = () => {
-  console.log("Selected ID:", selectedId.value);
+// Watchers to re-render on array changes
+watch(draggedItems, renderAll, { deep: true });
+watch(lines, renderAll, { deep: true });
 
-  if (!selectedId.value || selectedId.value[1] === null) {
-    console.warn("No SVG or line is selected for deletion.");
-    return;
-  }
-
-  // Check if the selected item is a SVG or a line
-  if (selectedId.value[0] === "svg") {
-    // Filter out the SVG with the matching selected ID
-    draggedItems.value = draggedItems.value.filter(
-      (svg) => svg.svgId !== selectedId.value[1]
-    );
-
-    // Find and remove the SVG element from the DOM
-    const svgElement = svgContainerRef.value.querySelector(
-      `[datasvgid="${selectedId.value[1]}"]`
-    );
-    if (svgElement) {
-      svgContainerRef.value.removeChild(svgElement);
-    }
-  } else if (selectedId.value[0] === "line") {
-    // Filter out the line with the matching selected ID
-    lines.value = lines.value.filter(
-      (line) => line.lineid !== selectedId.value[1]
-    );
-
-    // Find and remove the line group from the DOM
-    const lineElement = svgContainerRef.value.querySelector(
-      `[data-line-id="${selectedId.value[1]}"]`
-    );
-    if (lineElement) {
-      svgContainerRef.value.removeChild(lineElement);
-    }
-  }
-
-  // Clear the selection
-  selectedId.value = ["", null];
-  console.log("Updated draggedItems:", draggedItems.value);
-  console.log("Updated lines:", lines.value);
-};
-
-const renderSvg = (svg, x, y, scale = 1.5) => {
-  const svgContainer = svgContainerRef.value;
-
-  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  group.setAttribute("transform", `translate(${x}, ${y}) scale(${scale})`);
-  group.setAttribute("datasvgid", draggedItems.value.length);
-
-  let isDragging = false;
-  let startX, startY, initialX, initialY;
-
-  const onMouseDown = (e) => {
-    isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-
-    // Extract initial transform values
-    const transform = group.getAttribute("transform");
-    const translateMatch = /translate\(([\d.]+),\s*([\d.]+)\)/.exec(transform);
-    if (translateMatch) {
-      initialX = parseFloat(translateMatch[1]);
-      initialY = parseFloat(translateMatch[2]);
-    } else {
-      initialX = x;
-      initialY = y;
-    }
-
-    // Add event listeners for dragging
-    svgContainer.addEventListener("mousemove", onMouseMove);
-    svgContainer.addEventListener("mouseup", onMouseUp);
-
-    console.log(draggedItems.value);
-  };
-
-  const onMouseMove = (e) => {
-    if (!isDragging) return;
-
-    const deltaX = e.clientX - startX;
-    const deltaY = e.clientY - startY;
-
-    const newX = initialX + deltaX;
-    const newY = initialY + deltaY;
-
-    group.setAttribute(
-      "transform",
-      `translate(${newX}, ${newY}) scale(${scale})`
-    );
-  };
-
-  const onMouseUp = () => {
-    isDragging = false;
-
-    // Remove drag event listeners
-    svgContainer.removeEventListener("mousemove", onMouseMove);
-    svgContainer.removeEventListener("mouseup", onMouseUp);
-  };
-
-  const onClick = () => {
-    selectedId.value[0] = "svg";
-    selectedId.value[1] = parseInt(group.getAttribute("datasvgid"));
-
-    console.log("Selected SVG ID:", selectedId);
-  };
-  group.addEventListener("click", onClick);
-
-  group.addEventListener("mousedown", onMouseDown);
-
-  svg.paths.forEach((path) => {
-    const pathElement = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "path"
-    );
-    pathElement.setAttribute("d", path.d);
-    pathElement.setAttribute("fill", path.fill);
-    pathElement.setAttribute("stroke", path.stroke);
-    pathElement.setAttribute("stroke-width", path["stroke-width"]);
-    pathElement.setAttribute("transform", "scale(2)");
-
-    pathElement.addEventListener("mouseover", () => {
-      pathElement.setAttribute("stroke", "green");
-    });
-
-    pathElement.addEventListener("mouseleave", () => {
-      pathElement.setAttribute("stroke", path.stroke);
-    });
-
-    group.appendChild(pathElement);
-
-    // If the path has an ellipse, handle it separately
-    if (path.ellipse) {
-      const ellipseElement = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "ellipse"
-      );
-
-      ellipseElement.setAttribute("cx", path.ellipse.cx);
-      ellipseElement.setAttribute("cy", path.ellipse.cy);
-      ellipseElement.setAttribute("rx", path.ellipse.rx);
-      ellipseElement.setAttribute("ry", path.ellipse.ry);
-      ellipseElement.setAttribute("fill", path.ellipse.fill);
-      ellipseElement.setAttribute("stroke", path.ellipse.stroke);
-      ellipseElement.setAttribute("stroke-width", path.ellipse["stroke-width"]);
-      ellipseElement.setAttribute("transform", "scale(2)");
-
-      group.appendChild(ellipseElement);
-    }
-  });
-
-  svgContainer.appendChild(group);
-};
-
-// lines
-const addLines = (lineData) => {
-  lines.value.push({
-    lineid: lines.value.length + 1,
-    startXY: [100, 100],
-    endXY: [300, 300],
-    startAttachedTo: null,
-    endAttachedTo: null,
-    lineName: lineData.lineName,
-    paths: lineData.path,
-  });
-
-  // Render the new line immediately after adding it
-  renderLines(lines.value[lines.value.length - 1]);
-};
-
-const renderLines = (line) => {
-  const svgContainer = svgContainerRef.value;
-
-  const lineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  lineGroup.setAttribute("data-line-id", line.lineid);
-
-  // Create the line element
-  const lineElement = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "line"
-  );
-  lineElement.setAttribute("x1", line.startXY[0]);
-  lineElement.setAttribute("y1", line.startXY[1]);
-  lineElement.setAttribute("x2", line.endXY[0]);
-  lineElement.setAttribute("y2", line.endXY[1]);
-  lineElement.setAttribute("stroke", "white");
-  lineElement.setAttribute("stroke-width", "2");
-
-  // Append line to group
-  lineGroup.appendChild(lineElement);
-
-  lineElement.addEventListener("mouseover", () => {
-    lineElement.setAttribute("stroke", "green");
-  });
-
-  lineElement.addEventListener("mouseleave", () => {
-    lineElement.setAttribute("stroke", "white");
-  });
-
-  lineGroup.addEventListener("click", () => {
-    selectedId.value = ["line", line.lineid];
-    console.log("Selected Line ID:", selectedId.value);
-  });
-
-  // Create start and end drag handles
-  const createHandle = (cx, cy) => {
-    const handle = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "circle"
-    );
-    handle.setAttribute("cx", cx);
-    handle.setAttribute("cy", cy);
-    handle.setAttribute("r", "3");
-    handle.setAttribute("fill", "red");
-    handle.setAttribute("class", "drag-handle");
-    return handle;
-  };
-
-  const startHandle = createHandle(line.startXY[0], line.startXY[1]);
-  const endHandle = createHandle(line.endXY[0], line.endXY[1]);
-
-  // Append handles to group
-  lineGroup.appendChild(startHandle);
-  lineGroup.appendChild(endHandle);
-
-  // Append group to the SVG container
-  svgContainer.appendChild(lineGroup);
-
-  // Enable dragging on both start and end handles
-  const enableHandleDrag = (handle, line, handleType) => {
-    handle.addEventListener("mousedown", () => {
-      updateLineOnDrag(handle, line, handleType);
-    });
-  };
-
-  // Add drag behavior for the handles
-  enableHandleDrag(startHandle, line, "startXY");
-  enableHandleDrag(endHandle, line, "endXY");
-
-  // Function to update the line and handles during dragging
-  const updateLineOnDrag = (handle, line, handleType) => {
-    const onMouseMove = (e) => {
-      const rect = svgContainer.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      // Update the respective coordinate (start or end) based on the handle
-      if (handleType === "startXY") {
-        line.startXY = [mouseX, mouseY];
-        startHandle.setAttribute("cx", mouseX);
-        startHandle.setAttribute("cy", mouseY);
-        lineElement.setAttribute("x1", mouseX);
-        lineElement.setAttribute("y1", mouseY);
-      } else if (handleType === "endXY") {
-        line.endXY = [mouseX, mouseY];
-        endHandle.setAttribute("cx", mouseX);
-        endHandle.setAttribute("cy", mouseY);
-        lineElement.setAttribute("x2", mouseX);
-        lineElement.setAttribute("y2", mouseY);
-      }
-    };
-
-    // Attach mousemove listener
-    svgContainer.addEventListener("mousemove", onMouseMove);
-
-    // Stop dragging when mouseup is triggered
-    const onMouseUp = () => {
-      svgContainer.removeEventListener("mousemove", onMouseMove);
-      svgContainer.removeEventListener("mouseup", onMouseUp);
-    };
-
-    svgContainer.addEventListener("mouseup", onMouseUp);
-  };
-};
-
+// Event listeners for the SVG container
 onMounted(() => {
   const svgContainer = svgContainerRef.value;
 
+  // Handle drag over
   svgContainer.addEventListener("dragover", (e) => {
     e.preventDefault();
   });
 
+  // Handle drop for shapes
   svgContainer.addEventListener("drop", (e) => {
     e.preventDefault();
 
@@ -375,22 +194,8 @@ onMounted(() => {
     const svg = getSvgById(draggedSvgId);
 
     if (svg) {
-      draggedItems.value.push({
-        svgId: draggedItems.value.length + 1,
-        svgName: draggedSvgId,
-        x,
-        y,
-      });
-
-      renderSvg(svg, x, y);
+      renderShape(svg, x, y);
     }
-
-    console.log(draggedItems.value);
-  });
-
-  // Render existing lines only once during mount
-  lines.value.forEach((line) => {
-    renderLines(line);
   });
 });
 </script>
@@ -398,14 +203,12 @@ onMounted(() => {
 <template>
   <div class="flex flex-col min-h-screen">
     <NavBar />
-
     <div class="flex flex-1">
       <Sidebar
         @add-line="addLines"
         @delete-selected="deleteSelected"
         @download-image="downloadImage"
       />
-
       <main class="flex-1 px-5 overflow-auto">
         <div
           class="w-full h-full bg-white rounded-lg shadow-lg canvas-container resizable-container"
@@ -429,7 +232,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-main {
+.main {
   margin-top: 10px;
   transition: margin-left 0.3s ease-in-out;
 }

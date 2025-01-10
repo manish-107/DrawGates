@@ -12,8 +12,9 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  base: "/DrawGates/",
   server: {
-    host: "0.0.0.0", // Bind to all network interfaces
-    port: 5173, // Keep the default port or change if needed
+    host: "0.0.0.0",
+    port: 5173,
   },
 });

@@ -24,6 +24,7 @@ export default class Line {
     this.selectedIdDelete = selectedIdDelete;
   }
 
+  // render lines
   render() {
     // Create group element
     this.group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -104,7 +105,6 @@ export default class Line {
         }
       }
     }
-
     return handleType === "startXY" ? this.startXY : this.endXY;
   }
 
@@ -228,6 +228,7 @@ export default class Line {
     this.svgContainer.addEventListener("mouseup", onMouseUp);
   }
 
+  //Delete line
   delete() {
     if (this.group) {
       this.svgContainer.removeChild(this.group);
