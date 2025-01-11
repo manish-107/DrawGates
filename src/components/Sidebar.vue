@@ -1,8 +1,20 @@
 <script setup>
 import { svgData } from "@/assets/svgData";
 import { lines } from "@/assets/svgData";
+import { ref } from "vue";
 
-const emit = defineEmits(["add-line", "delete-selected", "download-image"]);
+const dropdownVisible = ref(false);
+
+const toggleDropdown = () => {
+  dropdownVisible.value = !dropdownVisible.value;
+};
+
+const emit = defineEmits([
+  "add-line",
+  "delete-selected",
+  "download-image",
+  "download-json",
+]);
 </script>
 
 <template>
@@ -30,12 +42,47 @@ const emit = defineEmits(["add-line", "delete-selected", "download-image"]);
         </svg>
         <span class="ml-2 hidden md:inline-block">Delete</span>
       </button>
-      <button
-        @click="emit('download-image')"
-        class="flex items-center px-3 py-2 text-sm font-medium bg-white border rounded-lg text-slate-800 hover:text-blue-600 hover:bg-slate-100 border-slate-200"
-      >
-        <span class="hidden md:inline-block">Download</span>
-      </button>
+      <div class="relative inline-block text-left">
+        <div>
+          <button
+            @click="toggleDropdown"
+            class="flex items-center px-3 py-2 text-sm font-medium bg-white border rounded-lg text-slate-800 hover:text-blue-600 hover:bg-slate-100 border-slate-200"
+          >
+            <span class="hidden md:inline-block">Download</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5 ml-2 -mr-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.293 9.707a1 1 0 011.414 0L10 13.586l3.293-3.879a1 1 0 011.707 1.207l-4 4.5a1 1 0 01-1.414 0l-4-4.5a1 1 0 01.293-.707z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Dropdown menu -->
+        <div
+          v-if="dropdownVisible"
+          class="absolute right-0 z-10 mt-2 w-30 bg-white rounded-xl shadow-lg border border-gray-200"
+        >
+          <button
+            @click="$emit('download-image')"
+            class="block w-full px-4 py-2 text-sm text-left rounded-xl text-slate-800 hover:bg-slate-100 hover:text-blue-600"
+          >
+            Download Image
+          </button>
+          <button
+            @click="$emit('download-json')"
+            class="block w-full px-4 py-2 text-sm text-left rounded-xl text-slate-800 hover:bg-slate-100 hover:text-blue-600"
+          >
+            Download JSON
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="flex flex-col w-full px-4">
@@ -126,3 +173,16 @@ const emit = defineEmits(["add-line", "delete-selected", "download-image"]);
     </div>
   </aside>
 </template>
+
+<style scoped>
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  width: 12rem;
+  background-color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+</style>

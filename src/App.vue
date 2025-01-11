@@ -100,6 +100,45 @@ const renderShape = (shapeData, x, y) => {
   draggedItems.value.push(shape);
 };
 
+const downloadJSON = () => {
+  // Prepare the data object
+  const data = {
+    shapes: draggedItems.value.map((shape) => ({
+      id: shape.svgId,
+      name: shape.svgName,
+      x: shape.x,
+      y: shape.y,
+      style: shape.style,
+      dimensions: shape.dimensions,
+      paths: shape.paths,
+    })),
+    lines: lines.value.map((line) => ({
+      id: line.lineId,
+      start: line.startXY,
+      end: line.endXY,
+      startShapeJoin: line.startShapeJoin,
+      endShapeJoin: line.endShapeJoin,
+      name: line.lineName,
+    })),
+  };
+
+  // Convert the data to a JSON string
+  const jsonData = JSON.stringify(data, null, 2);
+
+  // Create a Blob and download it
+  const blob = new Blob([jsonData], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "diagram_data.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url); // Clean up
+};
+
 const downloadImage = () => {
   const svgElement = document.getElementById("diagramSvg");
 
@@ -110,10 +149,10 @@ const downloadImage = () => {
 
   // Get the bounding box of the entire SVG
   const bbox = svgElement.getBBox();
-  const minX = bbox.x - 284; // Adjust for sidebar
-  const minY = bbox.y - 84; // Adjust for navbar
-  const maxX = bbox.x + bbox.width + 284; // Full width with offset
-  const maxY = bbox.y + bbox.height + 84; // Full height with offset
+  const minX = bbox.x - 284;
+  const minY = bbox.y - 84;
+  const maxX = bbox.x + bbox.width + 284;
+  const maxY = bbox.y + bbox.height + 84;
 
   // Clone SVG content into a new <svg>
   const svgNS = "http://www.w3.org/2000/svg";
@@ -169,7 +208,6 @@ const downloadImage = () => {
   img.src = url;
 };
 
-// Watchers to re-render on array changes
 watch(draggedItems, renderAll, { deep: true });
 watch(lines, renderAll, { deep: true });
 
@@ -208,6 +246,7 @@ onMounted(() => {
         @add-line="addLines"
         @delete-selected="deleteSelected"
         @download-image="downloadImage"
+        @download-json="downloadJSON"
       />
       <main class="flex-1 px-5 overflow-auto">
         <div
